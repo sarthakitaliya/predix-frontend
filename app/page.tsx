@@ -1,35 +1,32 @@
 "use client";
 import {
   usePrivy,
-  useSignMessage,
   useSessionSigners,
   type WalletWithMetadata,
   useLogin,
   useIdentityToken,
-  useSendTransaction,
 } from "@privy-io/react-auth";
 import {
   type ConnectedStandardSolanaWallet,
   useWallets,
   useFundWallet as useFundSolanaWallet,
   useSignAndSendTransaction,
+  useSignTransaction,
 } from "@privy-io/react-auth/solana";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import api from "./utils/axiosInstance";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import base64 from "base64-js";
-import { getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
+import { getAccount, getAssociatedTokenAddress, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 
-interface DelegateInfo{
+interface DelegateInfo {
   delegate: string;
   amount: number;
 }
 export default function Home() {
   const { ready, user, signMessage, logout } = usePrivy();
   const { wallets } = useWallets();
-  const { sendTransaction } = useSendTransaction();
-  const { fundWallet } = useFundSolanaWallet();
   const { addSessionSigners } = useSessionSigners();
   const { identityToken } = useIdentityToken();
   const { getAccessToken } = usePrivy();
@@ -38,6 +35,7 @@ export default function Home() {
   const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!);
   const selectedWallet = wallets[0];
   const { signAndSendTransaction } = useSignAndSendTransaction();
+  const { signTransaction } = useSignTransaction();
   const [delegateInfo, setDelegateInfo] = useState<DelegateInfo | null>(null);
 
   const { login } = useLogin({
@@ -88,6 +86,7 @@ export default function Home() {
     const signature = await signMessage({ message });
     console.log("Signature:", signature);
   };
+  console.log(user?.linkedAccounts);
 
   const delegatedWallet = user?.linkedAccounts.filter(
     (account): account is WalletWithMetadata =>
@@ -108,27 +107,29 @@ export default function Home() {
       const getInfo = await getAccount(connection, userAta);
       console.log("getInfo", getInfo.amount);
       const body = {
-        market_id: "solana-devnet",
+        market_id: 12412311,
         mint: usdcMint.toBase58(),
         user_ata: userAta.toBase58(),
         program_id: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         amount: 1000000,
         decimals: 6,
       };
-      const { data } = await axios.post("http://localhost:3030/approve", body, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-          "privy-id-token": identityToken,
-        },
-        // withCredentials: true,
-      });
+      const { data } = await axios.post(
+        "http://localhost:3030/orderbook/approve",
+        body,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "privy-id-token": identityToken,
+          },
+          // withCredentials: true,
+        }
+      );
       console.log(data);
       console.log(solanaAddress);
       const raw = Buffer.from(data.tx_message, "base64");
       console.log("raw", raw);
-
-      const tx = Transaction.from(raw);
       //convert tx to uint8array
       const txUint8Array = new Uint8Array(raw);
       const txSignature = await signAndSendTransaction({
@@ -144,37 +145,99 @@ export default function Home() {
     }
   }
   useEffect(() => {
-     const solanaWallet = user?.linkedAccounts.filter(
-        (account): account is WalletWithMetadata => {
-          console.log(account);
-          return (
-            account.type === "wallet" &&
-            account.chainType === "solana" &&
-            account.connectorType === "embedded"
-          );
-        }
-      );
-      console.log("solanaWallet", solanaWallet);
-      if (!solanaWallet) {
-        console.log("No solana wallet found");
-        return;
+    const solanaWallet = user?.linkedAccounts.filter(
+      (account): account is WalletWithMetadata => {
+        console.log(account);
+        return (
+          account.type === "wallet" &&
+          account.chainType === "solana" &&
+          account.connectorType === "embedded"
+        );
       }
-      setSolanaAddress(solanaWallet[0]?.address);
+    );
+    console.log("solanaWallet", solanaWallet);
+    if (!solanaWallet) {
+      console.log("No solana wallet found");
+      return;
+    }
+    setSolanaAddress(solanaWallet[0]?.address);
   }, [ready, solanaAddress]);
   async function check() {
     try {
-       const usdcMint = new PublicKey(
+      const usdcMint = new PublicKey(
         "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
       );
       const solAddress = new PublicKey(solanaAddress);
       const userAta = await getAssociatedTokenAddress(usdcMint, solAddress);
       console.log("userAta", userAta.toBase58());
       const getInfo = await getAccount(connection, userAta);
-      console.log("getInfo", getInfo.amount);
+      console.log("getInfo", getInfo);
       setDelegateInfo({
         delegate: getInfo.delegate?.toBase58() || "No delegate",
         amount: Number(getInfo.delegatedAmount),
       });
+      const accessToken = await getAccessToken();
+      //add body data
+      const body = {
+        market_id: 12412311,
+        collateral_mint: usdcMint.toBase58(),
+      };
+      const { data } = await axios.post(
+        "http://localhost:3030/orderbook/check",
+        body,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "privy-id-token": identityToken,
+          },
+          // withCredentials: true,
+        }
+      );
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
+  async function splitOrder() {
+    try {
+      const accessToken = await getAccessToken();
+      const marketId = 12412311;
+      //add body data amount 1 USDC
+      const body = {
+        market_id: marketId,
+        collateral_mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+        amount: 1000000,
+      };
+      //derive yes_mint no_mint from seeds
+    //  let [yesMint, yesBump] = PublicKey.findProgramAddressSync(
+    //   [Buffer.from("yes_mint"), Buffer.from(marketId.toString())],
+    //   new PublicKey("2FoSgViaZXUXL8txXYxc893cUSpPCuvdVZBJ9YDzUKzE")
+    // );
+    //   console.log("yes_mint", yesMint.toBase58());
+      
+    //   const yes_ata = getOrCreateAssociatedTokenAccount
+      const { data } = await axios.post(
+        "http://localhost:3030/orderbook/split-order",
+        body,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "privy-id-token": identityToken,
+          },
+          // withCredentials: true,
+        }
+      );
+      console.log(data);
+      const raw = Buffer.from(data.tx_message, "base64");
+      //convert tx to uint8array
+      const txUint8Array = new Uint8Array(raw);
+      const txSignature = await signAndSendTransaction({
+        transaction: txUint8Array,
+        wallet: selectedWallet!,
+        chain: "solana:devnet",
+      });
+      console.log("txSignature", txSignature);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -228,8 +291,17 @@ export default function Home() {
         >
           Place order
         </button>
-        <button className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20" onClick={check}>
+        <button
+          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          onClick={check}
+        >
           Check
+        </button>
+        <button
+          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          onClick={splitOrder}
+        >
+          Split order
         </button>
       </div>
       {delegateInfo && (
@@ -237,7 +309,7 @@ export default function Home() {
           <p>Delegate: {delegateInfo.delegate}</p>
           <p>Delegated Amount: {delegateInfo.amount}</p>
         </div>
-      ) }
+      )}
     </div>
   );
 }
