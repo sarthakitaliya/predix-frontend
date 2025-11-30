@@ -12,20 +12,31 @@ import {
   useFundWallet as useFundSolanaWallet,
   useSignAndSendTransaction,
   useSignTransaction,
+  useExportWallet,
 } from "@privy-io/react-auth/solana";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import api from "./utils/axiosInstance";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import {
+  Connection,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import base64 from "base64-js";
-import { getAccount, getAssociatedTokenAddress, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import {
+  getAccount,
+  getAssociatedTokenAddress,
+  getOrCreateAssociatedTokenAccount,
+} from "@solana/spl-token";
 
 interface DelegateInfo {
   delegate: string;
   amount: number;
 }
 export default function Home() {
-  const { ready, user, signMessage, logout } = usePrivy();
+  const { ready, user, signMessage, logout, authenticated } = usePrivy();
   const { wallets } = useWallets();
   const { addSessionSigners } = useSessionSigners();
   const { identityToken } = useIdentityToken();
@@ -37,6 +48,31 @@ export default function Home() {
   const { signAndSendTransaction } = useSignAndSendTransaction();
   const { signTransaction } = useSignTransaction();
   const [delegateInfo, setDelegateInfo] = useState<DelegateInfo | null>(null);
+  const { exportWallet } = useExportWallet();
+
+  const exportWalletData = async () => {
+    const isAuthenticated = ready && authenticated;
+    if (!isAuthenticated) {
+      console.log("User is not authenticated");
+      return;
+    }
+    if (!user) {
+      console.log("No user found");
+      return;
+    }
+    const hasEmbeddedWallet = !!user.linkedAccounts.find(
+      (account): account is WalletWithMetadata =>
+        account.type === "wallet" &&
+        account.walletClientType === "privy" &&
+        account.chainType === "solana"
+    );
+    if (hasEmbeddedWallet) {
+      const walletData = await exportWallet({
+        address: solanaAddress,
+      });
+    }
+    console.log(hasEmbeddedWallet);
+  };
 
   const { login } = useLogin({
     onComplete: async () => {
@@ -76,16 +112,6 @@ export default function Home() {
       );
     },
   });
-  const onSendTransaction = async () => {
-    // sendTransaction({
-    //   to: "0xE3070d3e4309afA3bC9a6b057685743CF42da77C",
-    //   value: 100000,
-    // });
-
-    const message = "Test message from Privy SDK";
-    const signature = await signMessage({ message });
-    console.log("Signature:", signature);
-  };
   console.log(user?.linkedAccounts);
 
   const delegatedWallet = user?.linkedAccounts.filter(
@@ -107,7 +133,7 @@ export default function Home() {
       const getInfo = await getAccount(connection, userAta);
       console.log("getInfo", getInfo.amount);
       const body = {
-        market_id: 12412311,
+        market_id: 1111111111,
         mint: usdcMint.toBase58(),
         user_ata: userAta.toBase58(),
         program_id: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
@@ -179,7 +205,7 @@ export default function Home() {
       const accessToken = await getAccessToken();
       //add body data
       const body = {
-        market_id: 12412311,
+        market_id: 1111111111,
         collateral_mint: usdcMint.toBase58(),
       };
       const { data } = await axios.post(
@@ -201,7 +227,7 @@ export default function Home() {
   async function splitOrder() {
     try {
       const accessToken = await getAccessToken();
-      const marketId = 12412311;
+      const marketId = 1111111111;
       //add body data amount 1 USDC
       const body = {
         market_id: marketId,
@@ -209,15 +235,60 @@ export default function Home() {
         amount: 1000000,
       };
       //derive yes_mint no_mint from seeds
-    //  let [yesMint, yesBump] = PublicKey.findProgramAddressSync(
-    //   [Buffer.from("yes_mint"), Buffer.from(marketId.toString())],
-    //   new PublicKey("2FoSgViaZXUXL8txXYxc893cUSpPCuvdVZBJ9YDzUKzE")
-    // );
-    //   console.log("yes_mint", yesMint.toBase58());
-      
-    //   const yes_ata = getOrCreateAssociatedTokenAccount
+      //  let [yesMint, yesBump] = PublicKey.findProgramAddressSync(
+      //   [Buffer.from("yes_mint"), Buffer.from(marketId.toString())],
+      //   new PublicKey("2FoSgViaZXUXL8txXYxc893cUSpPCuvdVZBJ9YDzUKzE")
+      // );
+      //   console.log("yes_mint", yesMint.toBase58());
+
+      //   const yes_ata = getOrCreateAssociatedTokenAccount
       const { data } = await axios.post(
         "http://localhost:3030/orderbook/split-order",
+        body,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "privy-id-token": identityToken,
+          },
+          // withCredentials: true,
+        }
+      );
+      console.log(data);
+      const raw = Buffer.from(data.tx_message, "base64");
+      //convert tx to uint8array
+      const txUint8Array = new Uint8Array(raw);
+      const txSignature = await signAndSendTransaction({
+        transaction: txUint8Array,
+        wallet: selectedWallet!,
+        chain: "solana:devnet",
+      });
+      console.log("txSignature", txSignature);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
+
+  async function mergeOrder() {
+    try {
+      const accessToken = await getAccessToken();
+      const marketId = 1111111111;
+      //add body data amount 1 USDC
+      const body = {
+        market_id: marketId,
+        collateral_mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+        amount: 1000000,
+      };
+      //derive yes_mint no_mint from seeds
+      //  let [yesMint, yesBump] = PublicKey.findProgramAddressSync(
+      //   [Buffer.from("yes_mint"), Buffer.from(marketId.toString())],
+      //   new PublicKey("2FoSgViaZXUXL8txXYxc893cUSpPCuvdVZBJ9YDzUKzE")
+      // );
+      //   console.log("yes_mint", yesMint.toBase58());
+
+      //   const yes_ata = getOrCreateAssociatedTokenAccount
+      const { data } = await axios.post(
+        "http://localhost:3030/orderbook/merge-order",
         body,
         {
           headers: {
@@ -297,13 +368,27 @@ export default function Home() {
         >
           Check
         </button>
+      </div>
+      <div className="flex">
         <button
-          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
           onClick={splitOrder}
+          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
         >
-          Split order
+          Split Order
+        </button>
+        <button
+          onClick={mergeOrder}
+          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+        >
+          Merge Order
         </button>
       </div>
+      <button
+        onClick={exportWalletData}
+        className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+      >
+        Export Wallet
+      </button>
       {delegateInfo && (
         <div>
           <p>Delegate: {delegateInfo.delegate}</p>
