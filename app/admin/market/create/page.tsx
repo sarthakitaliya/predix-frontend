@@ -26,10 +26,10 @@ export default function CreateMarketPage() {
   });
 
   const [form, setForm] = useState<CreateMarketRequest>({
-    market_id: 1111111111,
+    market_id: 111111112,
     metadata: "does this work?",
     collateral_mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
-    expiration_timestamp: Math.floor(Date.now() / 1000) + 86400, // default 24h from now
+    expiration_timestamp: Math.floor(Date.now() / 1000) + 432000, // default 5d from now
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
