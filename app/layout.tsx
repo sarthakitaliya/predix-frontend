@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PrivyProvider } from "@privy-io/react-auth";
 import Providers from "@/components/provider";
+import RequireAuth from "@/components/RequireAuth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,14 +26,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <Providers>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          {children}
-        </body>
-      </Providers>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <Providers>
+          <RequireAuth>{children}</RequireAuth>
+        </Providers>
+      </body>
     </html>
   );
 }

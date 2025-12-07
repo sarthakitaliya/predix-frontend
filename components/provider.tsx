@@ -1,7 +1,8 @@
 "use client";
 
 import { PrivyProvider } from "@privy-io/react-auth";
-import {createSolanaRpc, createSolanaRpcSubscriptions} from '@solana/kit';
+import { ThemeProvider } from "next-themes";
+import { createSolanaRpc, createSolanaRpcSubscriptions } from '@solana/kit';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   console.log(
@@ -20,20 +21,22 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             createOnLogin: "all-users",
           },
         },
-        solana:{
-            rpcs:{
-                'solana:devnet': {
-                    rpc: createSolanaRpc(process.env.NEXT_PUBLIC_RPC_URL!),
-                    rpcSubscriptions: createSolanaRpcSubscriptions(process.env.NEXT_PUBLIC_WS_RPC_URL!),
-                },
-            }
+        solana: {
+          rpcs: {
+            'solana:devnet': {
+              rpc: createSolanaRpc(process.env.NEXT_PUBLIC_RPC_URL!),
+              rpcSubscriptions: createSolanaRpcSubscriptions(process.env.NEXT_PUBLIC_WS_RPC_URL!),
+            },
+          }
         },
         appearance: {
           theme: "dark",
         },
       }}
     >
-      {children}
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        {children}
+      </ThemeProvider>
     </PrivyProvider>
   );
 }

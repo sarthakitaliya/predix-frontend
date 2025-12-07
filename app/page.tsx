@@ -9,7 +9,6 @@ import {
 import {
   type ConnectedStandardSolanaWallet,
   useWallets,
-  useFundWallet as useFundSolanaWallet,
   useSignAndSendTransaction,
   useSignTransaction,
   useExportWallet,
@@ -17,20 +16,10 @@ import {
 import axios from "axios";
 import { useEffect, useState } from "react";
 import api from "./utils/axiosInstance";
-import {
-  Connection,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from "@solana/web3.js";
-import base64 from "base64-js";
-import {
-  approve,
-  getAccount,
-  getAssociatedTokenAddress,
-  getOrCreateAssociatedTokenAccount,
-} from "@solana/spl-token";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { useUserStore } from "@/store/useUserStore";
 
 interface DelegateInfo {
   usdc?: {
@@ -47,9 +36,8 @@ interface DelegateInfo {
   };
 }
 export default function Home() {
-  const { ready, user, signMessage, logout, authenticated } = usePrivy();
+  const { ready, user, logout, authenticated } = usePrivy();
   const { wallets } = useWallets();
-  const { addSessionSigners } = useSessionSigners();
   const { identityToken } = useIdentityToken();
   const { getAccessToken } = usePrivy();
   const [solanaAddress, setSolanaAddress] = useState<string>("");
@@ -57,12 +45,29 @@ export default function Home() {
   const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!);
   const selectedWallet = wallets[0];
   const { signAndSendTransaction } = useSignAndSendTransaction();
-  const { signTransaction } = useSignTransaction();
   const [delegateInfo, setDelegateInfo] = useState<DelegateInfo | null>(null);
   const [side, setSide] = useState<"buy" | "sell" | null>(null);
   const { exportWallet } = useExportWallet();
-  const marketId = 111111112;
+  const { login } = useLogin();
+  const { user: currentUser } = useUserStore();
+  const marketId = "12196742119703774450"; // example market id
 
+  useEffect(() => {
+    if (currentUser) {
+      const solWallet = currentUser.linkedAccounts.find(
+        (account) =>
+          account.type === "wallet" &&
+          account.chainType === "solana"
+      );
+      console.log("wallet", solWallet);
+      
+      if(solWallet) {
+        console.log(solWallet.type == "wallet" ? solWallet.address : "ooooo");
+        
+        setSolanaAddress(solWallet.type === "wallet" ? solWallet.address : "");
+      }
+    }
+  }, [ready, authenticated, currentUser]);
   const exportWalletData = async () => {
     const isAuthenticated = ready && authenticated;
     if (!isAuthenticated) {
@@ -80,77 +85,12 @@ export default function Home() {
         account.chainType === "solana"
     );
     if (hasEmbeddedWallet) {
-      const walletData = await exportWallet({
+      await exportWallet({
         address: solanaAddress,
       });
     }
-    console.log(hasEmbeddedWallet);
   };
 
-  const { login } = useLogin({
-    onComplete: async () => {
-      console.log(user?.linkedAccounts);
-
-      const solanaWallet = user?.linkedAccounts.filter(
-        (account): account is WalletWithMetadata => {
-          console.log(account);
-          return (
-            account.type === "wallet" &&
-            account.chainType === "solana" &&
-            account.connectorType === "embedded"
-          );
-        }
-      );
-      console.log(solanaWallet);
-
-      if (solanaWallet) {
-        // await addSessionSigners({
-        //   address: solanaWallet[0]?.address!,
-        //   signers: [
-        //     {
-        //       signerId: process.env.NEXT_PUBLIC_PRIVY_SIGNER_ID!,
-        //       policyIds: [],
-        //     },
-        //   ],
-        // });
-        console.log("asdwdfafsfwda", solanaWallet[0]?.address);
-        setSolanaAddress(solanaWallet[0]?.address);
-      } else {
-        console.log("bo aaaa");
-      }
-      // console.log("token", identityToken);
-
-      console.log(
-        "Execute any logic you'd like to run after a user logs in, such as adding a session signer"
-      );
-    },
-  });
-  console.log(user?.linkedAccounts);
-
-  const delegatedWallet = user?.linkedAccounts.filter(
-    (account): account is WalletWithMetadata =>
-      account.type === "wallet" && account.delegated
-  );
-  useEffect(() => {
-    const solanaWallet = user?.linkedAccounts.filter(
-      (account): account is WalletWithMetadata => {
-        console.log(account);
-        return (
-          account.type === "wallet" &&
-          account.chainType === "solana" &&
-          account.connectorType === "embedded"
-        );
-      }
-    );
-    console.log("solanaWallet", solanaWallet);
-    if (!solanaWallet) {
-      console.log("No solana wallet found");
-      return;
-    }
-    setSolanaAddress(solanaWallet[0]?.address);
-  }, [ready, solanaAddress]);
-
-  console.log(delegatedWallet);
   async function delegate() {
     try {
       setLoading(true);
@@ -321,10 +261,10 @@ export default function Home() {
     try {
       const accessToken = await getAccessToken();
       const yesMint = new PublicKey(
-        "795UebHPfJ8VfpS3vgiRqvTgqM9T3gxqpNP8Vgsha8s3"
+        "5hwhLqPFHbBn93mG5zhvADpPq9wb3kdUD1skXfg3cMUw"
       );
       const noMint = new PublicKey(
-        "6GqjFuvFF7gJVSJ1SWFAwDNsJLPtwPa2SjUz2ye79LKo"
+        "8PmA1bBJSn5FWdc12B2BFxsnjMjWW6Tfz3JV12KWoB2T"
       );
       const solAddress = new PublicKey(solanaAddress);
       const userYesAta = await getAssociatedTokenAddress(yesMint, solAddress);
@@ -390,7 +330,10 @@ export default function Home() {
         market_id: marketId,
         collateral_mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
         amount: 1000000,
+        b: 2,
       };
+      console.log("body", body);
+
       //derive yes_mint no_mint from seeds
       //  let [yesMint, yesBump] = PublicKey.findProgramAddressSync(
       //   [Buffer.from("yes_mint"), Buffer.from(marketId.toString())],
@@ -476,7 +419,7 @@ export default function Home() {
       // decide side buy or sell based on button clicked
       const sideValue = side === "buy" ? "Bid" : "Ask";
       console.log(side);
-      
+
       const body = {
         market_id: marketId,
         collateral_mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
@@ -507,7 +450,10 @@ export default function Home() {
     return <div>Loading...</div>;
   }
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-24">
+    <div className="flex min-h-screen flex-col items-center justify-center p-24 bg-background text-foreground transition-colors">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div>
         {wallets.map((wallet: ConnectedStandardSolanaWallet) => (
           <div key={wallet.address}>
@@ -529,7 +475,7 @@ export default function Home() {
       </div>
       <button
         onClick={() => login()}
-        className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+        className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
       >
         Login with Privy
       </button>
@@ -541,39 +487,39 @@ export default function Home() {
       </button> */}
       <button
         onClick={() => logout()}
-        className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+        className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
       >
         Logout
       </button>
       <div className="flex">
         <button
           onClick={delegateYesToken}
-          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
         >
           Delegate Yes token
         </button>
         <button
           onClick={delegateNoToken}
-          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
         >
           Delegate No token
         </button>
         <button
           onClick={delegate}
-          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
         >
           Delegate USDC
         </button>
       </div>
       <div className="flex">
         <button
-          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
           onClick={check}
         >
           Check
         </button>
         <button
-          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
           onClick={checkToken}
         >
           Check Token
@@ -582,7 +528,7 @@ export default function Home() {
       <div className="text-center">
         <h1 className="font-bold text-2xl">Yes token</h1>
         <button
-          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
           onClick={() => {
             setSide("buy");
             placeOrder();
@@ -591,7 +537,7 @@ export default function Home() {
           Place Order buy
         </button>
         <button
-          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
           onClick={() => {
             setSide("sell");
             placeOrder();
@@ -603,20 +549,20 @@ export default function Home() {
       <div className="flex">
         <button
           onClick={splitOrder}
-          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
         >
           Split Order
         </button>
         <button
           onClick={mergeOrder}
-          className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
         >
           Merge Order
         </button>
       </div>
       <button
         onClick={exportWalletData}
-        className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+        className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
       >
         Export Wallet
       </button>
