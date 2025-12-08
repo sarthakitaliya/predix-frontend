@@ -1,597 +1,162 @@
 "use client";
-import {
-  usePrivy,
-  useSessionSigners,
-  type WalletWithMetadata,
-  useLogin,
-  useIdentityToken,
-} from "@privy-io/react-auth";
-import {
-  type ConnectedStandardSolanaWallet,
-  useWallets,
-  useSignAndSendTransaction,
-  useSignTransaction,
-  useExportWallet,
-} from "@privy-io/react-auth/solana";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import api from "./utils/axiosInstance";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { useUserStore } from "@/store/useUserStore";
 
-interface DelegateInfo {
-  usdc?: {
-    delegate: string;
-    amount: number;
-  };
-  yesToken?: {
-    delegate: string;
-    amount: number;
-  };
-  noToken?: {
-    delegate: string;
-    amount: number;
-  };
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import axios from "axios";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { UserMenu } from "@/components/user-menu";
+import { usePrivy } from "@privy-io/react-auth";
+import { Market } from "@/types/market";
+
+interface MarketsResponse {
+  markets: Market[];
 }
+
 export default function Home() {
-  const { ready, user, logout, authenticated } = usePrivy();
-  const { wallets } = useWallets();
-  const { identityToken } = useIdentityToken();
-  const { getAccessToken } = usePrivy();
-  const [solanaAddress, setSolanaAddress] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!);
-  const selectedWallet = wallets[0];
-  const { signAndSendTransaction } = useSignAndSendTransaction();
-  const [delegateInfo, setDelegateInfo] = useState<DelegateInfo | null>(null);
-  const [side, setSide] = useState<"buy" | "sell" | null>(null);
-  const { exportWallet } = useExportWallet();
-  const { login } = useLogin();
-  const { user: currentUser } = useUserStore();
-  const marketId = "12196742119703774450"; // example market id
+  const { user, login } = usePrivy();
+  const [markets, setMarkets] = useState<Market[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
-    if (currentUser) {
-      const solWallet = currentUser.linkedAccounts.find(
-        (account) =>
-          account.type === "wallet" &&
-          account.chainType === "solana"
-      );
-      console.log("wallet", solWallet);
-      
-      if(solWallet) {
-        console.log(solWallet.type == "wallet" ? solWallet.address : "ooooo");
-        
-        setSolanaAddress(solWallet.type === "wallet" ? solWallet.address : "");
+    const fetchMarkets = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get<MarketsResponse>("http://localhost:3030/markets?status=open");
+        setMarkets(data.markets || []);
+      } catch (error) {
+        console.error("Error fetching markets:", error);
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [ready, authenticated, currentUser]);
-  const exportWalletData = async () => {
-    const isAuthenticated = ready && authenticated;
-    if (!isAuthenticated) {
-      console.log("User is not authenticated");
-      return;
-    }
-    if (!user) {
-      console.log("No user found");
-      return;
-    }
-    const hasEmbeddedWallet = !!user.linkedAccounts.find(
-      (account): account is WalletWithMetadata =>
-        account.type === "wallet" &&
-        account.walletClientType === "privy" &&
-        account.chainType === "solana"
-    );
-    if (hasEmbeddedWallet) {
-      await exportWallet({
-        address: solanaAddress,
-      });
-    }
+    };
+    fetchMarkets();
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
   };
 
-  async function delegate() {
-    try {
-      setLoading(true);
-      const accessToken = await getAccessToken();
-      //add body data
-      const body = {
-        market_id: marketId,
-        side: "Bid",
-        share: "No",
-        amount: 1000000,
-        decimals: 6,
-      };
-      const { data } = await axios.post(
-        "http://localhost:3030/orderbook/approve",
-        body,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "privy-id-token": identityToken,
-          },
-          // withCredentials: true,
-        }
-      );
-      console.log(data);
-      console.log(solanaAddress);
-      const raw = Buffer.from(data.tx_message, "base64");
-      console.log("raw", raw);
-      //convert tx to uint8array
-      const txUint8Array = new Uint8Array(raw);
-      const txSignature = await signAndSendTransaction({
-        transaction: txUint8Array,
-        wallet: selectedWallet!,
-        chain: "solana:devnet",
-      });
-      console.log("txSignature", txSignature);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Predefined categories from Admin Create Page + 'All'
+  const categories = ["All", "Politics", "Crypto", "Sports", "Economics", "Finance"];
+  const filteredMarkets = selectedCategory === "All" ? markets : markets.filter(m => (m.category || "General") === selectedCategory);
 
-  async function delegateYesToken() {
-    try {
-      setLoading(true);
-      const accessToken = await getAccessToken();
-      //add body data
-      const body = {
-        market_id: marketId,
-        side: "Ask",
-        share: "Yes",
-        amount: 1000000,
-        decimals: 6,
-      };
-      const { data } = await axios.post(
-        "http://localhost:3030/orderbook/approve",
-        body,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "privy-id-token": identityToken,
-          },
-          // withCredentials: true,
-        }
-      );
-      console.log(data);
-      console.log(solanaAddress);
-      const raw = Buffer.from(data.tx_message, "base64");
-      console.log("raw", raw);
-      //convert tx to uint8array
-      const txUint8Array = new Uint8Array(raw);
-      const txSignature = await signAndSendTransaction({
-        transaction: txUint8Array,
-        wallet: selectedWallet!,
-        chain: "solana:devnet",
-      });
-      console.log("txSignature", txSignature);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-  async function delegateNoToken() {
-    try {
-      setLoading(true);
-      const accessToken = await getAccessToken();
-      //add body data
-      const body = {
-        market_id: marketId,
-        side: "Ask",
-        share: "No",
-        amount: 1000000,
-        decimals: 6,
-      };
-      const { data } = await axios.post(
-        "http://localhost:3030/orderbook/approve",
-        body,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "privy-id-token": identityToken,
-          },
-          // withCredentials: true,
-        }
-      );
-      console.log(data);
-      console.log(solanaAddress);
-      const raw = Buffer.from(data.tx_message, "base64");
-      console.log("raw", raw);
-      //convert tx to uint8array
-      const txUint8Array = new Uint8Array(raw);
-      const txSignature = await signAndSendTransaction({
-        transaction: txUint8Array,
-        wallet: selectedWallet!,
-        chain: "solana:devnet",
-      });
-      console.log("txSignature", txSignature);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-  async function check() {
-    try {
-      const usdcMint = new PublicKey(
-        "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
-      );
-      const solAddress = new PublicKey(solanaAddress);
-      const userUsdcAta = await getAssociatedTokenAddress(usdcMint, solAddress);
-      console.log("userUsdcAta", userUsdcAta.toBase58());
-      const getUsdcInfo = await getAccount(connection, userUsdcAta);
-      console.log("getUsdcInfo", getUsdcInfo.amount);
-      setDelegateInfo({
-        usdc: {
-          delegate: getUsdcInfo.delegate?.toBase58() || "No delegate",
-          amount: Number(getUsdcInfo.delegatedAmount),
-        },
-      });
-      const accessToken = await getAccessToken();
-      //add body data
-      const body = {
-        market_id: marketId,
-        collateral_mint: usdcMint.toBase58(),
-      };
-      const { data } = await axios.post(
-        "http://localhost:3030/orderbook/check",
-        body,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "privy-id-token": identityToken,
-          },
-          // withCredentials: true,
-        }
-      );
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  }
-
-  async function checkToken() {
-    try {
-      const accessToken = await getAccessToken();
-      const yesMint = new PublicKey(
-        "5hwhLqPFHbBn93mG5zhvADpPq9wb3kdUD1skXfg3cMUw"
-      );
-      const noMint = new PublicKey(
-        "8PmA1bBJSn5FWdc12B2BFxsnjMjWW6Tfz3JV12KWoB2T"
-      );
-      const solAddress = new PublicKey(solanaAddress);
-      const userYesAta = await getAssociatedTokenAddress(yesMint, solAddress);
-      const userNoAta = await getAssociatedTokenAddress(noMint, solAddress);
-      const getYesInfo = await getAccount(connection, userYesAta);
-      const getNoInfo = await getAccount(connection, userNoAta);
-      console.log("getYesInfo", getYesInfo.amount);
-      console.log("getNoInfo", getNoInfo.amount);
-      const bodyYes = {
-        market_id: marketId,
-        collateral_mint: yesMint.toBase58(),
-      };
-      const yesCheck = axios.post(
-        "http://localhost:3030/orderbook/check",
-        bodyYes,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "privy-id-token": identityToken,
-          },
-          // withCredentials: true,
-        }
-      );
-      const bodyNo = {
-        market_id: marketId,
-        collateral_mint: noMint.toBase58(),
-      };
-      const noCheck = axios.post(
-        "http://localhost:3030/orderbook/check",
-        bodyNo,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "privy-id-token": identityToken,
-          },
-          // withCredentials: true,
-        }
-      );
-      const [yesData, noData] = await Promise.all([yesCheck, noCheck]);
-      console.log("yesData", yesData.data);
-      console.log("noData", noData.data);
-      setDelegateInfo({
-        yesToken: {
-          delegate: getYesInfo.delegate?.toBase58() || "No delegate",
-          amount: Number(getYesInfo.delegatedAmount),
-        },
-        noToken: {
-          delegate: getNoInfo.delegate?.toBase58() || "No delegate",
-          amount: Number(getNoInfo.delegatedAmount),
-        },
-      });
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  }
-  async function splitOrder() {
-    try {
-      const accessToken = await getAccessToken();
-      //add body data amount 1 USDC
-      const body = {
-        market_id: marketId,
-        collateral_mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
-        amount: 1000000,
-        b: 2,
-      };
-      console.log("body", body);
-
-      //derive yes_mint no_mint from seeds
-      //  let [yesMint, yesBump] = PublicKey.findProgramAddressSync(
-      //   [Buffer.from("yes_mint"), Buffer.from(marketId.toString())],
-      //   new PublicKey("2FoSgViaZXUXL8txXYxc893cUSpPCuvdVZBJ9YDzUKzE")
-      // );
-      //   console.log("yes_mint", yesMint.toBase58());
-
-      //   const yes_ata = getOrCreateAssociatedTokenAccount
-      const { data } = await axios.post(
-        "http://localhost:3030/orderbook/split-order",
-        body,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "privy-id-token": identityToken,
-          },
-          // withCredentials: true,
-        }
-      );
-      console.log(data);
-      const raw = Buffer.from(data.tx_message, "base64");
-      //convert tx to uint8array
-      const txUint8Array = new Uint8Array(raw);
-      const txSignature = await signAndSendTransaction({
-        transaction: txUint8Array,
-        wallet: selectedWallet!,
-        chain: "solana:devnet",
-      });
-      console.log("txSignature", txSignature);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  }
-
-  async function mergeOrder() {
-    try {
-      const accessToken = await getAccessToken();
-      //add body data amount 1 USDC
-      const body = {
-        market_id: marketId,
-        collateral_mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
-        amount: 1000000,
-      };
-      //derive yes_mint no_mint from seeds
-      //  let [yesMint, yesBump] = PublicKey.findProgramAddressSync(
-      //   [Buffer.from("yes_mint"), Buffer.from(marketId.toString())],
-      //   new PublicKey("2FoSgViaZXUXL8txXYxc893cUSpPCuvdVZBJ9YDzUKzE")
-      // );
-      //   console.log("yes_mint", yesMint.toBase58());
-
-      //   const yes_ata = getOrCreateAssociatedTokenAccount
-      const { data } = await axios.post(
-        "http://localhost:3030/orderbook/merge-order",
-        body,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "privy-id-token": identityToken,
-          },
-          // withCredentials: true,
-        }
-      );
-      console.log(data);
-      const raw = Buffer.from(data.tx_message, "base64");
-      //convert tx to uint8array
-      const txUint8Array = new Uint8Array(raw);
-      const txSignature = await signAndSendTransaction({
-        transaction: txUint8Array,
-        wallet: selectedWallet!,
-        chain: "solana:devnet",
-      });
-      console.log("txSignature", txSignature);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  }
-
-  async function placeOrder() {
-    try {
-      const accessToken = await getAccessToken();
-      // decide side buy or sell based on button clicked
-      const sideValue = side === "buy" ? "Bid" : "Ask";
-      console.log(side);
-
-      const body = {
-        market_id: marketId,
-        collateral_mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
-        side: sideValue,
-        share: "No",
-        price: 1.0,
-        qty: 1,
-      };
-
-      const { data } = await axios.post(
-        "http://localhost:3030/orderbook/place-order",
-        body,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "privy-id-token": identityToken,
-          },
-          // withCredentials: true,
-        }
-      );
-      console.log(data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  }
-  if (!ready) {
-    return <div>Loading...</div>;
-  }
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-24 bg-background text-foreground transition-colors">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
-      <div>
-        {wallets.map((wallet: ConnectedStandardSolanaWallet) => (
-          <div key={wallet.address}>
-            <img src={wallet.standardWallet.icon} width={16} height={16} />
-            <span>{wallet.standardWallet.name}</span>
-            <br />
-            <code>{wallet.address}</code>
-            <button
-              onClick={async () => {
-                const message = new TextEncoder().encode("Hello, world!");
-                const { signature } = await wallet.signMessage({ message });
-                console.log("signature", signature);
-              }}
-            >
-              Sign message
-            </button>
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans transition-colors">
+      {/* Header */}
+      <header className="sticky top-0 z-10 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="text-xl font-bold tracking-tight text-[#07C285]">
+              Predix
+            </Link>
+            <nav className="hidden md:flex gap-6 text-sm font-medium">
+              <Link href="/" className="text-zinc-900 dark:text-white">Markets</Link>
+              <Link href="/profile" className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">Portfolio</Link>
+              <Link href="#" className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">Leaderboard</Link>
+            </nav>
           </div>
-        ))}
-      </div>
-      <button
-        onClick={() => login()}
-        className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-      >
-        Login with Privy
-      </button>
-      {/* <button
-        onClick={onSendTransaction}
-        className="mb-3 rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
-      >
-        Send Transaction
-      </button> */}
-      <button
-        onClick={() => logout()}
-        className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-      >
-        Logout
-      </button>
-      <div className="flex">
-        <button
-          onClick={delegateYesToken}
-          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-        >
-          Delegate Yes token
-        </button>
-        <button
-          onClick={delegateNoToken}
-          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-        >
-          Delegate No token
-        </button>
-        <button
-          onClick={delegate}
-          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-        >
-          Delegate USDC
-        </button>
-      </div>
-      <div className="flex">
-        <button
-          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-          onClick={check}
-        >
-          Check
-        </button>
-        <button
-          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-          onClick={checkToken}
-        >
-          Check Token
-        </button>
-      </div>
-      <div className="text-center">
-        <h1 className="font-bold text-2xl">Yes token</h1>
-        <button
-          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-          onClick={() => {
-            setSide("buy");
-            placeOrder();
-          }}
-        >
-          Place Order buy
-        </button>
-        <button
-          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-          onClick={() => {
-            setSide("sell");
-            placeOrder();
-          }}
-        >
-          Place Order sell
-        </button>
-      </div>
-      <div className="flex">
-        <button
-          onClick={splitOrder}
-          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-        >
-          Split Order
-        </button>
-        <button
-          onClick={mergeOrder}
-          className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-        >
-          Merge Order
-        </button>
-      </div>
-      <button
-        onClick={exportWalletData}
-        className="mb-3 rounded-full bg-zinc-200 dark:bg-zinc-800 px-10 py-3 font-semibold no-underline transition hover:bg-zinc-300 dark:hover:bg-zinc-700"
-      >
-        Export Wallet
-      </button>
-      {delegateInfo && (
-        <div>
-          <h2 className="text-lg font-semibold mb-2">Delegate Info:</h2>
-          {delegateInfo.usdc && (
-            <div className="mb-4">
-              <h3 className="text-md font-semibold">USDC:</h3>
-              <p>Delegate: {delegateInfo.usdc.delegate}</p>
-              <p>Amount: {delegateInfo.usdc.amount}</p>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            {!user ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={login}
+                  className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white px-3 py-2 font-bold text-sm transition-colors"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={login}
+                  className="bg-[#07C285] hover:bg-[#06a874] text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm"
+                >
+                  Sign up
+                </button>
+              </div>
+            ) : (
+              <UserMenu />
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <h2 className="text-2xl font-bold tracking-tight">Open Markets</h2>
+
+          {/* Category Filter Dropdown */}
+          <div className="relative">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="appearance-none bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 py-2.5 pl-4 pr-10 rounded-lg font-bold text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white transition-shadow cursor-pointer shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700"
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-500 dark:text-zinc-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
-          )}
-          {delegateInfo.yesToken && (
-            <div className="mb-4">
-              <h3 className="text-md font-semibold">Yes Token:</h3>
-              <p>Delegate: {delegateInfo.yesToken.delegate}</p>
-              <p>Amount: {delegateInfo.yesToken.amount}</p>
+          </div>
+        </div>
+
+        {/* Market Grid */}
+        <div className="space-y-6">
+          {loading ? (
+            <div className="flex items-center justify-center p-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900 dark:border-white"></div>
             </div>
-          )}
-          {delegateInfo.noToken && (
-            <div className="mb-4">
-              <h3 className="text-md font-semibold">No Token:</h3>
-              <p>Delegate: {delegateInfo.noToken.delegate}</p>
-              <p>Amount: {delegateInfo.noToken.amount}</p>
+          ) : filteredMarkets.length === 0 ? (
+            <div className="text-center p-20 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+              <p className="text-zinc-500">No open markets found for this category.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredMarkets.map((market) => (
+                <Link href={`/markets/${market.market_id}`} key={market.id} className="group block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 hover:shadow-lg transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex gap-4">
+                      {market.image_url ? (
+                        <img src={market.image_url} alt={market.title} className="w-12 h-12 rounded-full object-cover shadow-sm bg-zinc-100" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 shadow-sm flex items-center justify-center text-white font-bold text-xl">
+                          {market.title.charAt(0)}
+                        </div>
+                      )}
+                      <div>
+                        {/* Tags */}
+                        <div className="flex gap-2 mb-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
+                            {market.category}
+                          </span>
+                        </div>
+                        <h3 className="text-lg font-bold leading-tight line-clamp-2 group-hover:text-[#07C285] transition-colors">{market.title}</h3>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-6">
+                    <span className="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">Yes 78¢</span>
+                    <span className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">No 22¢</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                    <span>Vol. ${market.volume || "0"}</span>
+                    <span>Ends {formatDate(market.close_time)}</span>
+                  </div>
+                </Link>
+              ))}
             </div>
           )}
         </div>
-      )}
+      </main>
     </div>
   );
 }

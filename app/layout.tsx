@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { PrivyProvider } from "@privy-io/react-auth";
 import Providers from "@/components/provider";
-import RequireAuth from "@/components/RequireAuth";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +30,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <RequireAuth>{children}</RequireAuth>
+          <Toaster richColors position="top-center" />
+          {children}
         </Providers>
       </body>
     </html>

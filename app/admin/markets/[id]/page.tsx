@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { usePrivy, useIdentityToken, useLogin } from "@privy-io/react-auth";
 import { useSignAndSendTransaction, useWallets } from "@privy-io/react-auth/solana";
+import { toast } from "sonner";
 
 interface Market {
     id: string;
@@ -91,7 +92,7 @@ export default function MarketDetailPage({
                 outcome: outcome,
             };
             const { data } = await axios.post(
-                "http://localhost:3030/admin/market/resolve",
+                "http://localhost:3030/admin/market/set-winner",
                 body,
                 {
                     headers: {
@@ -110,10 +111,11 @@ export default function MarketDetailPage({
                 wallet: selectedWallet!,
                 chain: "solana:devnet",
             });
+            toast.success("Market resolved successfully");
             router.refresh();
         } catch (err: any) {
             console.error("Error resolving market:", err);
-            alert(err?.response?.data?.message || "Failed to resolve market");
+            toast.error(err?.response?.data?.message || "Failed to resolve market");
         } finally {
             setLoading(false);
         }
@@ -271,7 +273,7 @@ export default function MarketDetailPage({
                                 <div className="p-4 bg-gray-100 dark:bg-zinc-800 rounded-lg text-center">
                                     <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-2">Market Resolved As</p>
                                     <p className={`text-3xl font-black ${market.outcome === "Yes" || market.outcome === "yes" ? "text-green-600 dark:text-green-400" :
-                                            market.outcome === "No" || market.outcome === "no" ? "text-red-600 dark:text-red-400" : "text-zinc-900 dark:text-white"
+                                        market.outcome === "No" || market.outcome === "no" ? "text-red-600 dark:text-red-400" : "text-zinc-900 dark:text-white"
                                         }`}>
                                         {market.outcome?.toUpperCase() || "UNKNOWN"}
                                     </p>
@@ -294,8 +296,8 @@ export default function MarketDetailPage({
                                     <button
                                         onClick={() => setOutcome("yes")}
                                         className={`w-full py-4 px-4 rounded-xl font-bold border-2 transition-all flex items-center justify-between group ${outcome === "yes"
-                                                ? "border-green-600 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 shadow-sm"
-                                                : "border-gray-100 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 hover:border-green-400 dark:hover:border-green-500/50 text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700"
+                                            ? "border-green-600 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 shadow-sm"
+                                            : "border-gray-100 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 hover:border-green-400 dark:hover:border-green-500/50 text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700"
                                             }`}
                                     >
                                         <span>YES</span>
@@ -318,8 +320,8 @@ export default function MarketDetailPage({
                                     <button
                                         onClick={() => setOutcome("no")}
                                         className={`w-full py-4 px-4 rounded-xl font-bold border-2 transition-all flex items-center justify-between group ${outcome === "no"
-                                                ? "border-red-600 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 shadow-sm"
-                                                : "border-gray-100 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 hover:border-red-400 dark:hover:border-red-500/50 text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700"
+                                            ? "border-red-600 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 shadow-sm"
+                                            : "border-gray-100 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 hover:border-red-400 dark:hover:border-red-500/50 text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700"
                                             }`}
                                     >
                                         <span>NO</span>
@@ -345,8 +347,8 @@ export default function MarketDetailPage({
                                     disabled={!outcome}
                                     onClick={handleResolve}
                                     className={`w-full py-3.5 font-bold rounded-xl text-white transition-all shadow-md ${outcome
-                                            ? "bg-black dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-gray-200 active:transform active:scale-95"
-                                            : "bg-gray-200 dark:bg-zinc-800 cursor-not-allowed text-gray-400 dark:text-zinc-600 shadow-none"
+                                        ? "bg-black dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-gray-200 active:transform active:scale-95"
+                                        : "bg-gray-200 dark:bg-zinc-800 cursor-not-allowed text-gray-400 dark:text-zinc-600 shadow-none"
                                         }`}
                                 >
                                     Confirm Resolution

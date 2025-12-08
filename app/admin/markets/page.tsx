@@ -14,6 +14,7 @@ interface Market {
     volume?: string; // Optional 
     status: string;
     close_time: string;
+    image_url: string | null;
 }
 
 interface MarketsResponse {
@@ -29,11 +30,11 @@ export default function MarketsPage() {
     const [markets, setMarkets] = useState<Market[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const {user: storedUser} = useUserStore();
+    const { user: storedUser } = useUserStore();
     useEffect(() => {
         console.log("Stored user in markets page:", storedUser);
     }, [storedUser]);
-    
+
     const getAllMarkets = async () => {
         if (!user) return;
 
@@ -139,6 +140,7 @@ export default function MarketsPage() {
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 dark:bg-zinc-900 border-b border-gray-100 dark:border-zinc-800">
                             <tr>
+                                <th className="px-6 py-4 w-16"></th>
                                 <th className="px-6 py-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Title</th>
                                 {/* Volume column removed as per new API response missing it */}
                                 <th className="px-6 py-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Status</th>
@@ -152,6 +154,15 @@ export default function MarketsPage() {
                                     onClick={() => handleRowClick(market.market_id)} // Use on-chain ID for details URL? Or UUID? Assuming market_id is more useful for details
                                     className="group hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
                                 >
+                                    <td className="px-6 py-5 pr-0 w-16">
+                                        {market.image_url ? (
+                                            <img src={market.image_url} alt={market.title} className="w-10 h-10 rounded-full object-cover shadow-sm bg-zinc-100" />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 shadow-sm flex items-center justify-center text-white font-bold text-sm">
+                                                {market.title.charAt(0)}
+                                            </div>
+                                        )}
+                                    </td>
                                     <td className="px-6 py-5">
                                         <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-black dark:group-hover:text-white">{market.title}</div>
                                         <div className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 font-mono">ID: {market.market_id}</div>
