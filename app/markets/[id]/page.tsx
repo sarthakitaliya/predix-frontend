@@ -96,11 +96,11 @@ export default function MarketDetailPage({
                         <span className="font-bold text-lg">Predix</span>
                     </Link>
                     <div className="flex items-center gap-4">
-                        <ThemeToggle />
+                        {!user && <ThemeToggle />}
                         {!user ? (
                             <div className="flex items-center gap-2">
-                                <button onClick={login} className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white px-3 py-1.5 font-bold text-sm transition-colors">Log in</button>
-                                <button onClick={login} className="bg-[#07C285] hover:bg-[#06a874] text-white px-4 py-1.5 rounded-lg font-bold text-sm transition-colors shadow-sm">Sign up</button>
+                                <button onClick={login} className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white px-3 py-1.5 font-bold text-sm transition-colors cursor-pointer">Log in</button>
+                                <button onClick={login} className="bg-[#07C285] hover:bg-[#06a874] text-white px-4 py-1.5 rounded-lg font-bold text-sm transition-colors shadow-sm cursor-pointer">Sign up</button>
                             </div>
                         ) : (
                             <UserMenu />
@@ -132,7 +132,7 @@ export default function MarketDetailPage({
                         <PriceChart outcome={outcome} />
 
                         {/* Pass outcome prop to drive dynamic data */}
-                        <Orderbook outcome={outcome} />
+                        <Orderbook outcome={outcome} marketId={market.market_id} />
 
                         <div className="border-t border-zinc-100 dark:border-zinc-800 pt-8">
                             <h3 className="text-lg font-bold mb-4">Market Rules</h3>
@@ -162,28 +162,28 @@ export default function MarketDetailPage({
                                     <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-full p-1">
                                         <button
                                             onClick={() => setAction("buy")}
-                                            className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all ${action === "buy" ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
+                                            className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${action === "buy" ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
                                         >
                                             Buy
                                         </button>
                                         <button
                                             onClick={() => setAction("sell")}
-                                            className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all ${action === "sell" ? "bg-red-500 text-white shadow-sm shadow-red-500/30" : "text-zinc-500 hover:text-red-500 dark:hover:text-red-400"}`}
+                                            className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${action === "sell" ? "bg-red-500 text-white shadow-sm shadow-red-500/30" : "text-zinc-500 hover:text-red-500 dark:hover:text-red-400"}`}
                                         >
                                             Sell
                                         </button>
                                     </div>
 
                                     <div className="relative group">
-                                        <button className="text-xs font-bold flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors">
+                                        <button className="text-xs font-bold flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer">
                                             {orderType === "market" ? "Market Order" : orderType === "limit" ? "Limit Order" : orderType === "split" ? "Split Order" : "Merge Order"}
                                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                         </button>
                                         <div className="absolute right-0 top-full mt-2 w-40 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 p-1">
-                                            <button onClick={() => setOrderType("market")} className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md">Market Order</button>
-                                            <button onClick={() => setOrderType("limit")} className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md">Limit Order</button>
-                                            <button onClick={() => { setOrderType("split"); setIsModalOpen(true); }} className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md">Split Order</button>
-                                            <button onClick={() => { setOrderType("merge"); setIsModalOpen(true); }} className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md">Merge Order</button>
+                                            <button onClick={() => setOrderType("market")} className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md cursor-pointer">Market Order</button>
+                                            <button onClick={() => setOrderType("limit")} className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md cursor-pointer">Limit Order</button>
+                                            <button onClick={() => { setOrderType("split"); setIsModalOpen(true); }} className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md cursor-pointer">Split Order</button>
+                                            <button onClick={() => { setOrderType("merge"); setIsModalOpen(true); }} className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md cursor-pointer">Merge Order</button>
                                         </div>
                                     </div>
                                 </div>
@@ -192,14 +192,14 @@ export default function MarketDetailPage({
                                 <div className="grid grid-cols-2 p-4 gap-3">
                                     <button
                                         onClick={() => setOutcome("yes")}
-                                        className={`flex flex-col items-center justify-center py-3 rounded-lg border-2 transition-all ${outcome === "yes" ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "border-transparent bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"}`}
+                                        className={`flex flex-col items-center justify-center py-3 rounded-lg border-2 transition-all cursor-pointer ${outcome === "yes" ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "border-transparent bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"}`}
                                     >
                                         <span className={`text-sm font-bold ${outcome === "yes" ? "text-blue-600 dark:text-blue-400" : "text-zinc-600 dark:text-zinc-400"}`}>Yes</span>
                                         <span className={`text-lg font-black ${outcome === "yes" ? "text-blue-700 dark:text-blue-300" : "text-zinc-900 dark:text-zinc-200"}`}>78¢</span>
                                     </button>
                                     <button
                                         onClick={() => setOutcome("no")}
-                                        className={`flex flex-col items-center justify-center py-3 rounded-lg border-2 transition-all ${outcome === "no" ? "border-red-500 bg-red-50 dark:bg-red-900/20" : "border-transparent bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"}`}
+                                        className={`flex flex-col items-center justify-center py-3 rounded-lg border-2 transition-all cursor-pointer ${outcome === "no" ? "border-red-500 bg-red-50 dark:bg-red-900/20" : "border-transparent bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"}`}
                                     >
                                         <span className={`text-sm font-bold ${outcome === "no" ? "text-red-600 dark:text-red-400" : "text-zinc-600 dark:text-zinc-400"}`}>No</span>
                                         <span className={`text-lg font-black ${outcome === "no" ? "text-red-700 dark:text-red-300" : "text-zinc-900 dark:text-zinc-200"}`}>22¢</span>
@@ -213,13 +213,42 @@ export default function MarketDetailPage({
                                             <div className="flex justify-between items-center mb-1">
                                                 <label className="text-xs font-bold text-zinc-400 uppercase">Limit Price</label>
                                                 <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
-                                                    <button onClick={() => setLimitPrice(p => Math.max(0.01, parseFloat((p - 0.01).toFixed(2))))} className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-zinc-700 rounded-md transition-colors text-zinc-500">
+                                                    <button
+                                                        onClick={() => setLimitPrice(p => Math.max(0.001, parseFloat((Number(p) - 0.01).toFixed(3))))}
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-zinc-700 rounded-md transition-colors text-zinc-500 cursor-pointer"
+                                                    >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4"></path></svg>
                                                     </button>
-                                                    <div className="w-16 text-center font-mono font-bold text-zinc-900 dark:text-white">
-                                                        {limitPrice.toFixed(2)}¢
+                                                    <div className="flex items-center justify-center relative w-16">
+                                                        <input
+                                                            type="number"
+                                                            step="0.1"
+                                                            min="0.1"
+                                                            value={limitPrice ? parseFloat((limitPrice * 100).toFixed(1)) : ""}
+                                                            onChange={(e) => {
+                                                                let val = parseFloat(e.target.value);
+                                                                if (!isNaN(val)) {
+                                                                    // Smart Decimal Shift for rapid entry (e.g. 111 -> 11.1)
+                                                                    if (val >= 100) {
+                                                                        val = val / 10;
+                                                                    }
+                                                                    // Strict Maximum Enforcement
+                                                                    if (val > 99.9) val = 99.9;
+                                                                    if (val < 0) val = 0;
+
+                                                                    setLimitPrice(val / 100);
+                                                                } else if (e.target.value === "") {
+                                                                    setLimitPrice(0);
+                                                                }
+                                                            }}
+                                                            className="w-full text-center font-mono font-bold bg-transparent outline-none text-zinc-900 dark:text-white appearance-none [&::-webkit-inner-spin-button]:appearance-none p-0 z-10"
+                                                        />
+                                                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-xs pointer-events-none">¢</span>
                                                     </div>
-                                                    <button onClick={() => setLimitPrice(p => Math.min(0.99, parseFloat((p + 0.01).toFixed(2))))} className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-zinc-700 rounded-md transition-colors text-zinc-500">
+                                                    <button
+                                                        onClick={() => setLimitPrice(p => Math.min(1.00, parseFloat((Number(p) + 0.01).toFixed(3))))}
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-zinc-700 rounded-md transition-colors text-zinc-500 cursor-pointer"
+                                                    >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                                                     </button>
                                                 </div>
@@ -275,8 +304,8 @@ export default function MarketDetailPage({
                                     <button
                                         onClick={handlePlaceOrder}
                                         disabled={tradeLoading || !user || !amount}
-                                        className={`w-full py-3.5 rounded-lg font-bold text-base shadow-lg transition-all transform active:scale-[0.98] mt-2 ${!user ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed" :
-                                            tradeLoading ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 animate-pulse" :
+                                        className={`w-full py-3.5 rounded-lg font-bold text-base shadow-lg transition-all transform active:scale-[0.98] mt-2 cursor-pointer ${!user ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed" :
+                                            tradeLoading ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 animate-pulse cursor-wait" :
                                                 action === "sell"
                                                     ? "bg-red-500 hover:bg-red-600 text-white shadow-red-500/20"
                                                     : "bg-green-500 hover:bg-green-600 text-white shadow-green-500/20"

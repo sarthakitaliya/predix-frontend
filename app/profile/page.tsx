@@ -73,7 +73,7 @@ export default function ProfilePage() {
                                         <span>{address.slice(0, 6)}...{address.slice(-4)}</span>
                                         <button
                                             onClick={() => { navigator.clipboard.writeText(address); }}
-                                            className="hover:text-zinc-900 dark:hover:text-white transition-colors"
+                                            className="hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                         </button>
@@ -83,12 +83,12 @@ export default function ProfilePage() {
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        <button className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-bold text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                        <button className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-bold text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
                             Edit Profile
                         </button>
                         <button
                             onClick={logout}
-                            className="px-4 py-2 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-lg font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                            className="px-4 py-2 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-lg font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
                         >
                             Log Out
                         </button>
@@ -108,7 +108,7 @@ export default function ProfilePage() {
                     <div className="flex items-center border-b border-zinc-200 dark:border-zinc-800 px-6">
                         <button
                             onClick={() => setActiveTab("overview")}
-                            className={`py-4 px-2 text-sm font-bold border-b-2 transition-colors mr-6 ${activeTab === "overview"
+                            className={`py-4 px-2 text-sm font-bold border-b-2 transition-colors mr-6 cursor-pointer ${activeTab === "overview"
                                 ? "border-black dark:border-white text-black dark:text-white"
                                 : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
                                 }`}
@@ -117,7 +117,7 @@ export default function ProfilePage() {
                         </button>
                         <button
                             onClick={() => setActiveTab("history")}
-                            className={`py-4 px-2 text-sm font-bold border-b-2 transition-colors mr-6 ${activeTab === "history"
+                            className={`py-4 px-2 text-sm font-bold border-b-2 transition-colors mr-6 cursor-pointer ${activeTab === "history"
                                 ? "border-black dark:border-white text-black dark:text-white"
                                 : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
                                 }`}
@@ -126,7 +126,7 @@ export default function ProfilePage() {
                         </button>
                         <button
                             onClick={() => setActiveTab("settings")}
-                            className={`py-4 px-2 text-sm font-bold border-b-2 transition-colors ${activeTab === "settings"
+                            className={`py-4 px-2 text-sm font-bold border-b-2 transition-colors cursor-pointer ${activeTab === "settings"
                                 ? "border-black dark:border-white text-black dark:text-white"
                                 : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
                                 }`}

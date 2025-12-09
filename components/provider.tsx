@@ -24,8 +24,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         solana: {
           rpcs: {
             'solana:devnet': {
-              rpc: createSolanaRpc(process.env.NEXT_PUBLIC_RPC_URL!),
-              rpcSubscriptions: createSolanaRpcSubscriptions(process.env.NEXT_PUBLIC_WS_RPC_URL!),
+              rpc: createSolanaRpc(process.env.NEXT_PUBLIC_RPC_URL || 'https://api.devnet.solana.com'),
+              rpcSubscriptions: createSolanaRpcSubscriptions(process.env.NEXT_PUBLIC_WS_RPC_URL || 'wss://api.devnet.solana.com'),
             },
           }
         },

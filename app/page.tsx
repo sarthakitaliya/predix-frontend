@@ -6,7 +6,10 @@ import axios from "axios";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 import { usePrivy } from "@privy-io/react-auth";
+import { useFundWallet } from "@privy-io/react-auth/solana";
 import { Market } from "@/types/market";
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { toast } from "sonner";
 
 interface MarketsResponse {
   markets: Market[];
@@ -14,6 +17,7 @@ interface MarketsResponse {
 
 export default function Home() {
   const { user, login } = usePrivy();
+  const { fundWallet } = useFundWallet();
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -42,7 +46,22 @@ export default function Home() {
     });
   };
 
-  // Predefined categories from Admin Create Page + 'All'
+  const handleDeposit = async () => {
+    if (!user?.wallet?.address) return;
+    try {
+      await fundWallet({
+        address: user.wallet.address,
+        options: {
+          cluster: { name: "devnet" },
+          asset: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+        }
+      } as any);
+    } catch (e: any) {
+      console.error("Deposit failed:", e);
+      toast.error(`Deposit Error: ${e.message || "Unable to connect"}`);
+    }
+  };
+
   const categories = ["All", "Politics", "Crypto", "Sports", "Economics", "Finance"];
   const filteredMarkets = selectedCategory === "All" ? markets : markets.filter(m => (m.category || "General") === selectedCategory);
 
@@ -62,18 +81,26 @@ export default function Home() {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <ThemeToggle />
+            {!user && <ThemeToggle />}
+            {user && (
+              <button
+                onClick={handleDeposit}
+                className="bg-[#07C285] hover:bg-[#06a874] text-white px-4 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors"
+              >
+                Deposit
+              </button>
+            )}
             {!user ? (
               <div className="flex items-center gap-2">
                 <button
                   onClick={login}
-                  className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white px-3 py-2 font-bold text-sm transition-colors"
+                  className="text-zinc-600 dark:text-zinc-400 font-medium text-sm hover:text-zinc-900 dark:hover:text-zinc-100 px-4 py-2 cursor-pointer"
                 >
                   Log in
                 </button>
                 <button
                   onClick={login}
-                  className="bg-[#07C285] hover:bg-[#06a874] text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm"
+                  className="bg-[#07C285] hover:bg-[#06a874] text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors cursor-pointer"
                 >
                   Sign up
                 </button>

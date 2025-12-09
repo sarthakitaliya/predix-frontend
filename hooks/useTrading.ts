@@ -50,7 +50,7 @@ export const useTrading = () => {
                 };
 
                 const { data } = await axios.post(
-                    "http://localhost:3030/orderbook/split-order",
+                    "http://localhost:3030/orders/split",
                     body,
                     {
                         headers: {
@@ -78,7 +78,7 @@ export const useTrading = () => {
                 };
 
                 const { data } = await axios.post(
-                    "http://localhost:3030/orderbook/merge-order",
+                    "http://localhost:3030/orders/merge",
                     body,
                     {
                         headers: {
@@ -125,13 +125,13 @@ export const useTrading = () => {
                 const delegateBody = {
                     market_id: market.market_id,
                     side: action === "buy" ? "Bid" : "Ask",
-                    share: outcome === "yes" ? "Yes" : "No",
+                    share: outcome,
                     amount: delegateAmount,
                     decimals: 6, // Should this be derived or fixed? Limit/Market logic
                 };
 
                 const { data: approveData } = await axios.post(
-                    "http://localhost:3030/orderbook/approve",
+                    "http://localhost:3030/markets/delegate",
                     delegateBody,
                     {
                         headers: {
@@ -161,7 +161,7 @@ export const useTrading = () => {
                 };
 
                 const { data: orderData } = await axios.post(
-                    "http://localhost:3030/orderbook/place-order",
+                    "http://localhost:3030/orders/place",
                     orderBody,
                     {
                         headers: {
