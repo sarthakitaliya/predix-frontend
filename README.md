@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Predix - Prediction Market (Off-Chain Matching + Solana On-Chain Settlement)
 
-## Getting Started
+Predix is a high-performance prediction market backend built in Rust.  
+It performs order matching off-chain, sends settlement instructions to Solana, and synchronizes on-chain state back into the database through an event listener.
 
-First, run the development server:
+The Anchor program and frontend UI are maintained in separate repositories.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Related Repositories
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **backend:** https://github.com/sarthakitaliya/predix-backend  
+- **On-Chain Anchor Program:** https://github.com/sarthakitaliya/solana-prediction-market-program  
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Architecture
 
-## Learn More
+<img width="1033" height="751" alt="Screenshot 2025-12-12 at 6 10 13 AM" src="https://github.com/user-attachments/assets/787ee239-753c-4f90-82f0-a44ee414799e" />
 
-To learn more about Next.js, take a look at the following resources:
+## Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Off-chain Matching Engine for instant order matching  
+- Tokio task per market for isolated concurrent execution  
+- `mpsc` + `oneshot` channels for efficient internal communication  
+- Privy authentication and wallet integration  
+- On-chain settlement via external Anchor program  
+- Event Listener to persist on-chain state changes into Postgres  
+- Admin panel for market creation, resolution, and management  
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Flow (high level)
 
-## Deploy on Vercel
+1. **Client authenticates using Privy**  
+   User sessions and signatures are handled through Privy.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Client submits an order**  
+   Backend validates the request and forwards the order to the Matching Engine.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **Matching Engine (Off-chain)**  
+   - Runs as a dedicated Tokio task per market  
+   - Uses `mpsc` and `oneshot` channels for message passing  
+   - Produces fills/partial fills when a match is found  
+
+4. **Backend submits the settlement instruction on-chain**  
+   When a match occurs, the backend sends a transaction to the Anchor program **before persisting any state locally**.
+
+5. **On-chain program executes and emits logs**  
+   The Anchor program emits events after on-chain settlement.
+
+6. **Event Listener processes logs**  
+   Reads Anchor program logs and applies all confirmed updates to the database.
+
+7. **Database stores canonical state**  
+   Orders, fills, positions, and markets are only persisted after on-chain confirmation.
+
+8. **Admin Panel**  
+   - Create markets  
+   - Resolve markets  
+   - View market list and status  
+
+---
