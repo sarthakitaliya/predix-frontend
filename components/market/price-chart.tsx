@@ -41,8 +41,10 @@ export const PriceChart = ({ outcome }: PriceChartProps) => {
                     <path d={`M0,100 L0,${outcome === 'yes' ? 80 : 20} ${points} L300,${outcome === 'yes' ? 5 : 90} L300,100 Z`} fill={`url(#gradient-${outcome})`} />
                     <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                    <div className="h-full w-px bg-zinc-300 dark:bg-zinc-700"></div>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center pointer-events-none bg-white/5 dark:bg-black/5 backdrop-blur-[1px]">
+                    <div className="bg-zinc-900/90 dark:bg-zinc-100/90 text-white dark:text-zinc-900 px-4 py-2 rounded-full text-xs font-bold shadow-xl backdrop-blur-md transform scale-95 group-hover:scale-100 transition-transform">
+                        Simulated market data for demonstration
+                    </div>
                 </div>
             </div>
         </div>

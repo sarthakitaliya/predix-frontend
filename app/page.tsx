@@ -77,7 +77,6 @@ export default function Home() {
             <nav className="hidden md:flex gap-6 text-sm font-medium">
               <Link href="/" className="text-zinc-900 dark:text-white">Markets</Link>
               <Link href="/profile" className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">Portfolio</Link>
-              <Link href="#" className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">Leaderboard</Link>
             </nav>
           </div>
           <div className="flex items-center gap-4">
