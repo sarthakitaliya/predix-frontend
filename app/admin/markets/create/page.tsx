@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/app/utils/axiosInstance";
 import { usePrivy, useIdentityToken, useLogin } from "@privy-io/react-auth";
 
 export default function CreateMarketPage() {
@@ -57,13 +57,11 @@ export default function CreateMarketPage() {
                 expiration_timestamp: expirationTimestamp,
             };
 
-            const { data } = await axios.post(
-                "http://localhost:3030/admin/market/create",
+            const { data } = await api.post(
+                "/admin/market/create",
                 body,
                 {
                     headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
                         "privy-id-token": identityToken,
                     },
                 }

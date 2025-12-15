@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import axios from "axios";
+import api from "@/app/utils/axiosInstance";
 import { usePrivy } from "@privy-io/react-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PriceChart } from "@/components/market/price-chart";
@@ -38,8 +38,8 @@ export default function MarketDetailPage() {
     const fetchMarket = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get<{ market: Market }>(
-          `http://localhost:3030/markets/${id}`
+        const { data } = await api.get<{ market: Market }>(
+          `/markets/${id}`
         );
 
         if (data.market) {
@@ -198,21 +198,19 @@ export default function MarketDetailPage() {
                   <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-full p-1">
                     <button
                       onClick={() => setAction("buy")}
-                      className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                        action === "buy"
-                          ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white"
-                          : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-                      }`}
+                      className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${action === "buy"
+                        ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white"
+                        : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                        }`}
                     >
                       Buy
                     </button>
                     <button
                       onClick={() => setAction("sell")}
-                      className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                        action === "sell"
-                          ? "bg-red-500 text-white shadow-sm shadow-red-500/30"
-                          : "text-zinc-500 hover:text-red-500 dark:hover:text-red-400"
-                      }`}
+                      className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${action === "sell"
+                        ? "bg-red-500 text-white shadow-sm shadow-red-500/30"
+                        : "text-zinc-500 hover:text-red-500 dark:hover:text-red-400"
+                        }`}
                     >
                       Sell
                     </button>
@@ -223,10 +221,10 @@ export default function MarketDetailPage() {
                       {orderType === "market"
                         ? "Market Order"
                         : orderType === "limit"
-                        ? "Limit Order"
-                        : orderType === "split"
-                        ? "Split Order"
-                        : "Merge Order"}
+                          ? "Limit Order"
+                          : orderType === "split"
+                            ? "Split Order"
+                            : "Merge Order"}
                       <svg
                         className="w-3 h-3"
                         fill="none"
@@ -280,54 +278,48 @@ export default function MarketDetailPage() {
                 <div className="grid grid-cols-2 p-4 gap-3">
                   <button
                     onClick={() => setOutcome("yes")}
-                    className={`flex flex-col items-center justify-center py-3 rounded-lg border-2 transition-all cursor-pointer ${
-                      outcome === "yes"
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                        : "border-transparent bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                    }`}
+                    className={`flex flex-col items-center justify-center py-3 rounded-lg border-2 transition-all cursor-pointer ${outcome === "yes"
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-transparent bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                      }`}
                   >
                     <span
-                      className={`text-sm font-bold ${
-                        outcome === "yes"
-                          ? "text-blue-600 dark:text-blue-400"
-                          : "text-zinc-600 dark:text-zinc-400"
-                      }`}
+                      className={`text-sm font-bold ${outcome === "yes"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-zinc-600 dark:text-zinc-400"
+                        }`}
                     >
                       Yes
                     </span>
                     <span
-                      className={`text-lg font-black ${
-                        outcome === "yes"
-                          ? "text-blue-700 dark:text-blue-300"
-                          : "text-zinc-900 dark:text-zinc-200"
-                      }`}
+                      className={`text-lg font-black ${outcome === "yes"
+                        ? "text-blue-700 dark:text-blue-300"
+                        : "text-zinc-900 dark:text-zinc-200"
+                        }`}
                     >
                       78¢
                     </span>
                   </button>
                   <button
                     onClick={() => setOutcome("no")}
-                    className={`flex flex-col items-center justify-center py-3 rounded-lg border-2 transition-all cursor-pointer ${
-                      outcome === "no"
-                        ? "border-red-500 bg-red-50 dark:bg-red-900/20"
-                        : "border-transparent bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                    }`}
+                    className={`flex flex-col items-center justify-center py-3 rounded-lg border-2 transition-all cursor-pointer ${outcome === "no"
+                      ? "border-red-500 bg-red-50 dark:bg-red-900/20"
+                      : "border-transparent bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                      }`}
                   >
                     <span
-                      className={`text-sm font-bold ${
-                        outcome === "no"
-                          ? "text-red-600 dark:text-red-400"
-                          : "text-zinc-600 dark:text-zinc-400"
-                      }`}
+                      className={`text-sm font-bold ${outcome === "no"
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-zinc-600 dark:text-zinc-400"
+                        }`}
                     >
                       No
                     </span>
                     <span
-                      className={`text-lg font-black ${
-                        outcome === "no"
-                          ? "text-red-700 dark:text-red-300"
-                          : "text-zinc-900 dark:text-zinc-200"
-                      }`}
+                      className={`text-lg font-black ${outcome === "no"
+                        ? "text-red-700 dark:text-red-300"
+                        : "text-zinc-900 dark:text-zinc-200"
+                        }`}
                     >
                       22¢
                     </span>
@@ -461,8 +453,8 @@ export default function MarketDetailPage() {
                         {orderType === "limit"
                           ? limitPrice.toFixed(2)
                           : outcome === "yes"
-                          ? "0.78"
-                          : "0.22"}
+                            ? "0.78"
+                            : "0.22"}
                         ¢
                       </span>
                     </div>
@@ -471,14 +463,14 @@ export default function MarketDetailPage() {
                       <span className="font-mono font-bold text-zinc-900 dark:text-white">
                         {amount
                           ? `$${(orderType === "market" && action === "buy"
-                              ? parseFloat(amount)
-                              : parseFloat(amount) *
-                                (orderType === "limit"
-                                  ? limitPrice
-                                  : outcome === "yes"
-                                  ? 0.78
-                                  : 0.22)
-                            ).toFixed(2)}`
+                            ? parseFloat(amount)
+                            : parseFloat(amount) *
+                            (orderType === "limit"
+                              ? limitPrice
+                              : outcome === "yes"
+                                ? 0.78
+                                : 0.22)
+                          ).toFixed(2)}`
                           : "$0.00"}
                       </span>
                     </div>
@@ -490,10 +482,10 @@ export default function MarketDetailPage() {
                         {action === "buy"
                           ? amount
                             ? `$${(orderType === "market" && action === "buy"
-                                ? parseFloat(amount) /
-                                  (outcome === "yes" ? 0.78 : 0.22)
-                                : parseFloat(amount)
-                              ).toFixed(2)}`
+                              ? parseFloat(amount) /
+                              (outcome === "yes" ? 0.78 : 0.22)
+                              : parseFloat(amount)
+                            ).toFixed(2)}`
                             : "$0.00"
                           : "N/A (Selling)"}
                       </span>
@@ -504,22 +496,20 @@ export default function MarketDetailPage() {
                   <button
                     onClick={handlePlaceOrder}
                     disabled={tradeLoading || !user || !amount}
-                    className={`w-full py-3.5 rounded-lg font-bold text-base shadow-lg transition-all transform active:scale-[0.98] mt-2 cursor-pointer ${
-                      !user
-                        ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
-                        : tradeLoading
+                    className={`w-full py-3.5 rounded-lg font-bold text-base shadow-lg transition-all transform active:scale-[0.98] mt-2 cursor-pointer ${!user
+                      ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
+                      : tradeLoading
                         ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 animate-pulse cursor-wait"
                         : action === "sell"
-                        ? "bg-red-500 hover:bg-red-600 text-white shadow-red-500/20"
-                        : "bg-green-500 hover:bg-green-600 text-white shadow-green-500/20"
-                    }`}
+                          ? "bg-red-500 hover:bg-red-600 text-white shadow-red-500/20"
+                          : "bg-green-500 hover:bg-green-600 text-white shadow-green-500/20"
+                      }`}
                   >
                     {!user
                       ? "Log in to Trade"
                       : tradeLoading
-                      ? "Processing..."
-                      : `${action === "buy" ? "Buy" : "Sell"} ${
-                          outcome === "yes" ? "Yes" : "No"
+                        ? "Processing..."
+                        : `${action === "buy" ? "Buy" : "Sell"} ${outcome === "yes" ? "Yes" : "No"
                         }`}
                   </button>
                 </div>

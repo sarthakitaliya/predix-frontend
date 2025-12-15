@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/app/utils/axiosInstance";
 
 interface OrderbookProps {
     outcome: "yes" | "no";
@@ -29,7 +29,7 @@ export const Orderbook = ({ outcome, marketId }: OrderbookProps) => {
         const fetchOrderbook = async () => {
             try {
                 // setLoading(true); // Don't reset loading on simple refresh intervals if we add polling later
-                const { data } = await axios.get<MarketSnapshot>(`http://localhost:3030/orderbook/snapshot/${marketId}`);
+                const { data } = await api.get<MarketSnapshot>(`/orderbook/snapshot/${marketId}`);
                 setSnapshot(data);
             } catch (err) {
                 console.error("Failed to fetch orderbook:", err);

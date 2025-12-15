@@ -1,6 +1,6 @@
 import { usePrivy, useIdentityToken } from "@privy-io/react-auth";
 import { useSignAndSendTransaction, useWallets } from "@privy-io/react-auth/solana";
-import axios from "axios";
+import api from "@/app/utils/axiosInstance";
 import { useState } from "react";
 import { Market } from "@/types/market";
 import { toast } from "sonner";
@@ -49,13 +49,11 @@ export const useTrading = () => {
                     amount: Math.floor(parseFloat(amount) * 1_000_000),
                 };
 
-                const { data } = await axios.post(
-                    "http://localhost:3030/orders/split",
+                const { data } = await api.post(
+                    "/orders/split",
                     body,
                     {
                         headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
                             "privy-id-token": identityToken,
                         },
                     }
@@ -77,13 +75,11 @@ export const useTrading = () => {
                     amount: Math.floor(parseFloat(amount) * 1_000_000),
                 };
 
-                const { data } = await axios.post(
-                    "http://localhost:3030/orders/merge",
+                const { data } = await api.post(
+                    "/orders/merge",
                     body,
                     {
                         headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
                             "privy-id-token": identityToken,
                         },
                     }
@@ -130,13 +126,11 @@ export const useTrading = () => {
                     decimals: 6, // Should this be derived or fixed? Limit/Market logic
                 };
 
-                const { data: approveData } = await axios.post(
-                    "http://localhost:3030/markets/delegate",
+                const { data: approveData } = await api.post(
+                    "/markets/delegate",
                     delegateBody,
                     {
                         headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
                             "privy-id-token": identityToken,
                         },
                     }
@@ -160,13 +154,11 @@ export const useTrading = () => {
                     qty: shares,
                 };
 
-                const { data: orderData } = await axios.post(
-                    "http://localhost:3030/orders/place",
+                const { data: orderData } = await api.post(
+                    "/orders/place",
                     orderBody,
                     {
                         headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
                             "privy-id-token": identityToken,
                         },
                     }

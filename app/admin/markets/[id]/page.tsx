@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/app/utils/axiosInstance";
 import { usePrivy, useIdentityToken, useLogin } from "@privy-io/react-auth";
 import { useSignAndSendTransaction, useWallets } from "@privy-io/react-auth/solana";
 import { toast } from "sonner";
@@ -25,8 +25,8 @@ interface MarketResponse {
 }
 
 export default function MarketDetailPage() {
-    const {id} = useParams<{ id: string }>();
-    
+    const { id } = useParams<{ id: string }>();
+
     const router = useRouter();
     const { ready, user, getAccessToken } = usePrivy();
     const { identityToken } = useIdentityToken();
@@ -47,12 +47,10 @@ export default function MarketDetailPage() {
             try {
                 setLoading(true);
                 const accessToken = await getAccessToken();
-                const { data } = await axios.get<MarketResponse>(
-                    `http://localhost:3030/markets/${id}`,
+                const { data } = await api.get<MarketResponse>(
+                    `/markets/${id}`,
                     {
                         headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
                             "privy-id-token": identityToken,
                         },
                     }
@@ -89,13 +87,11 @@ export default function MarketDetailPage() {
                 market_id: id,
                 outcome: outcome,
             };
-            const { data } = await axios.post(
-                "http://localhost:3030/admin/market/set-winner",
+            const { data } = await api.post(
+                "/admin/market/set-winner",
                 body,
                 {
                     headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
                         "privy-id-token": identityToken,
                     },
                 }

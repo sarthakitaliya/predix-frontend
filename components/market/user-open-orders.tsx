@@ -2,7 +2,7 @@
 import { usePrivy, useIdentityToken } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import axios from "axios";
+import api from "@/app/utils/axiosInstance";
 
 interface OpenOrder {
     id: string;
@@ -28,9 +28,8 @@ export const UserOpenOrders = ({ marketId, isEmbedded = false }: { marketId: str
             try {
                 setLoading(true);
                 const accessToken = await getAccessToken();
-                const { data } = await axios.get<OpenOrder[]>(`http://localhost:3030/orderbook/open/${marketId}`, {
+                const { data } = await api.get<OpenOrder[]>(`/orderbook/open/${marketId}`, {
                     headers: {
-                        Authorization: `Bearer ${accessToken}`,
                         "privy-id-token": identityToken,
                     }
                 });
@@ -65,12 +64,10 @@ export const UserOpenOrders = ({ marketId, isEmbedded = false }: { marketId: str
                 price: order.price
             };
 
-            await axios.delete(
-                `http://localhost:3030/orders/cancel/${order.id}`,
+            await api.delete(
+                `/orders/cancel/${order.id}`,
                 {
                     headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
                         "privy-id-token": identityToken,
                     },
                     data: body

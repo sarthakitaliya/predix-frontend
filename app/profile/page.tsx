@@ -44,7 +44,7 @@ export default function ProfilePage() {
 
     // Derived user info
     const googleAccount = user.linkedAccounts.find(a => a.type === "google_oauth") as any;
-    const walletAccount = user.linkedAccounts.find(a => a.type === "wallet") as any;
+    const walletAccount = user.linkedAccounts.find(a => a.type === "wallet" && a.chainType === "solana") as any;
     const emailAccount = user.linkedAccounts.find(a => a.type === "email") as any;
 
     const email = googleAccount?.email || emailAccount?.address;

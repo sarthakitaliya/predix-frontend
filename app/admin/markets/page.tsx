@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/app/utils/axiosInstance";
 import { usePrivy, useIdentityToken, useLogin } from "@privy-io/react-auth";
 import { useUserStore } from "@/store/useUserStore";
 
@@ -41,12 +41,10 @@ export default function MarketsPage() {
         try {
             setLoading(true);
             const accessToken = await getAccessToken();
-            const { data } = await axios.get<MarketsResponse>(
-                "http://localhost:3030/admin/markets",
+            const { data } = await api.get<MarketsResponse>(
+                "/admin/markets",
                 {
                     headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
                         "privy-id-token": identityToken,
                     },
                 }

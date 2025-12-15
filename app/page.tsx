@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import axios from "axios";
+import api from "@/app/utils/axiosInstance";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 import { usePrivy } from "@privy-io/react-auth";
@@ -26,7 +26,7 @@ export default function Home() {
     const fetchMarkets = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get<MarketsResponse>("http://localhost:3030/markets?status=open");
+        const { data } = await api.get<MarketsResponse>("/markets?status=open");
         setMarkets(data.markets || []);
       } catch (error) {
         console.error("Error fetching markets:", error);
