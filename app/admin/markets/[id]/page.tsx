@@ -7,6 +7,7 @@ import axios from "axios";
 import { usePrivy, useIdentityToken, useLogin } from "@privy-io/react-auth";
 import { useSignAndSendTransaction, useWallets } from "@privy-io/react-auth/solana";
 import { toast } from "sonner";
+import { useParams } from 'next/navigation'
 
 interface Market {
     id: string;
@@ -23,12 +24,9 @@ interface MarketResponse {
     market: Market;
 }
 
-export default function MarketDetailPage({
-    params,
-}: {
-    params: Promise<{ id: string }>;
-}) {
-    const { id } = use(params);
+export default function MarketDetailPage() {
+    const {id} = useParams<{ id: string }>();
+    
     const router = useRouter();
     const { ready, user, getAccessToken } = usePrivy();
     const { identityToken } = useIdentityToken();
