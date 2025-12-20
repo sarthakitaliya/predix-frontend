@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { createTransferInstruction, getAssociatedTokenAddress } from "@solana/spl-token";
-import { useSignAndSendTransaction, useWallets, useExportWallet } from "@privy-io/react-auth/solana";
+import { useSignAndSendTransaction, useWallets, useExportWallet, useFundWallet } from "@privy-io/react-auth/solana";
 import { useUSDCBalance } from "@/hooks/useUSDCBalance";
 import { toast } from "sonner";
 
@@ -17,10 +17,28 @@ export default function ProfilePage() {
     const { signAndSendTransaction } = useSignAndSendTransaction();
     const { wallets } = useWallets();
     const { exportWallet } = useExportWallet();
+    const { fundWallet } = useFundWallet();
 
     const [recipient, setRecipient] = useState("");
     const [amount, setAmount] = useState("");
     const [sending, setSending] = useState(false);
+
+    const handleDeposit = async () => {
+        if (!user?.wallet?.address) return;
+        try {
+            await fundWallet({
+                address: user.wallet.address,
+                options: {
+                    defaultFundingMethod: "manual",
+                    chain: "solana:devnet",
+                    asset: "USDC",
+                },
+            } as any);
+        } catch (e: any) {
+            console.error("Deposit failed:", e);
+            toast.error(`Deposit Error: ${e.message || "Unable to connect"}`);
+        }
+    };
 
     const handleSendUSDC = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -126,10 +144,10 @@ export default function ProfilePage() {
                             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
                                 {displayName}
                             </h1>
-                            <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 font-mono text-xs mt-1">
-                                {email && <span className="mr-2">{email}</span>}
+                            <div className="flex flex-col md:flex-row md:items-center md:gap-2 text-zinc-500 dark:text-zinc-400 font-mono text-xs mt-1">
+                                {email && <span className="md:mr-2">{email}</span>}
                                 {address && (
-                                    <>
+                                    <div className="flex items-center gap-1">
                                         <span>{address.slice(0, 6)}...{address.slice(-4)}</span>
                                         <button
                                             onClick={() => { navigator.clipboard.writeText(address); }}
@@ -137,15 +155,21 @@ export default function ProfilePage() {
                                         >
                                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                         </button>
-                                    </>
+                                    </div>
                                 )}
                             </div>
                         </div>
                     </div>
                     <div className="flex gap-3">
                         <button
+                            onClick={handleDeposit}
+                            className="px-4 py-2 bg-[#07C285] hover:bg-[#06a874] text-white rounded-lg font-bold text-sm shadow-sm transition-colors cursor-pointer"
+                        >
+                            Deposit
+                        </button>
+                        <button
                             onClick={logout}
-                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-lg font-medium text-sm hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                            className="px-4 py-2 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-lg font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
                         >
                             Log Out
                         </button>

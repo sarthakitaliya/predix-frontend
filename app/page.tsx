@@ -105,31 +105,8 @@ export default function Home() {
           <div className="flex items-center gap-4">
             {!user && <ThemeToggle />}
             {user && (
-              <button
-                onClick={handleDeposit}
-                className="bg-[#07C285] hover:bg-[#06a874] text-white px-4 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors"
-              >
-                Deposit
-              </button>
-            )}
-            {!user ? (
               <div className="flex items-center gap-2">
-                <button
-                  onClick={login}
-                  className="text-zinc-600 dark:text-zinc-400 font-medium text-sm hover:text-zinc-900 dark:hover:text-zinc-100 px-4 py-2 cursor-pointer"
-                >
-                  Log in
-                </button>
-                <button
-                  onClick={login}
-                  className="bg-[#07C285] hover:bg-[#06a874] text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors cursor-pointer"
-                >
-                  Sign up
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <div className="hidden md:flex flex-col items-end mr-2">
+                <div className="flex flex-col items-end mr-2">
                   <span className="text-xs text-zinc-500 font-medium">Balance</span>
                   <span className={`text-sm font-bold text-zinc-900 dark:text-zinc-100 transition-all duration-500 ${isRefreshing ? "animate-pulse text-green-500" : ""}`}>
                     {balance} USDC

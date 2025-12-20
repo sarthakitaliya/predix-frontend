@@ -111,7 +111,17 @@ export default function MarketDetailPage() {
           </Link>
           <div className="flex items-center gap-4">
             {!user && <ThemeToggle />}
-            {!user ? (
+            {user ? (
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col items-end mr-2">
+                  <span className="text-xs text-zinc-500 font-medium">Balance</span>
+                  <span className={`text-sm font-bold text-zinc-900 dark:text-zinc-100 transition-all duration-500 ${isRefreshing ? "animate-pulse text-green-500" : ""}`}>
+                    {balance} USDC
+                  </span>
+                </div>
+                <UserMenu />
+              </div>
+            ) : (
               <div className="flex items-center gap-2">
                 <button
                   onClick={login}
@@ -125,16 +135,6 @@ export default function MarketDetailPage() {
                 >
                   Sign up
                 </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <div className="hidden md:flex flex-col items-end mr-2">
-                  <span className="text-xs text-zinc-500 font-medium">Balance</span>
-                  <span className={`text-sm font-bold text-zinc-900 dark:text-zinc-100 transition-all duration-500 ${isRefreshing ? "animate-pulse text-green-500" : ""}`}>
-                    {balance} USDC
-                  </span>
-                </div>
-                <UserMenu />
               </div>
             )}
           </div>
