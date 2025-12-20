@@ -82,12 +82,19 @@ export const UserOpenOrders = ({ marketId, isEmbedded = false }: { marketId: str
         }
     };
 
-    if (!user) return null;
+    if (!user) {
+        return (
+            <div className="flex flex-col items-center justify-center py-16 text-zinc-400 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800">
+                <p className="font-medium">Log in to view your orders</p>
+            </div>
+        );
+    }
 
     if (orders.length === 0 && !loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-zinc-500 dark:text-zinc-600">
-                <p>No open orders</p>
+            <div className="flex flex-col items-center justify-center py-16 text-zinc-500 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800">
+                <svg className="w-10 h-10 mb-3 text-zinc-300 dark:text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <p className="font-medium">No open orders</p>
             </div>
         );
     }

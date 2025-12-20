@@ -143,7 +143,7 @@ export default function MarketDetailPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* LEFT COLUMN: Content (8/12) */}
+          {/* LEFT COLUMN PART 1: Chart & Orderbook (8/12) */}
           <div className="lg:col-span-8 space-y-10">
             <div className="flex gap-6 items-start">
               {market.image_url && (
@@ -170,19 +170,9 @@ export default function MarketDetailPage() {
 
             {/* Pass outcome prop to drive dynamic data */}
             <Orderbook outcome={outcome} marketId={market.market_id} />
-
-            <div className="border-t border-zinc-100 dark:border-zinc-800 pt-8">
-              <h3 className="text-lg font-bold mb-4">Market Rules</h3>
-              <div className="prose dark:prose-invert prose-zinc max-w-none text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                {market.description ||
-                  "No specific details provided for this market."}
-              </div>
-            </div>
-
-            <UserMarketTabs marketId={market.market_id} />
           </div>
 
-          {/* RIGHT COLUMN: Trading Panel (4/12) */}
+          {/* RIGHT COLUMN: Trading Panel (4/12) - Placed here for Mobile Ordering */}
           <div className="lg:col-span-4 relative">
             <div className="sticky top-24">
               <div className="flex items-center gap-3 mb-4">
@@ -547,6 +537,19 @@ export default function MarketDetailPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* LEFT COLUMN PART 2: Rules & Tabs (8/12) - Wrapped below Trading Panel */}
+          <div className="lg:col-span-8 space-y-10">
+            <div className="border-t border-zinc-100 dark:border-zinc-800 pt-8">
+              <h3 className="text-lg font-bold mb-4">Market Rules</h3>
+              <div className="prose dark:prose-invert prose-zinc max-w-none text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                {market.description ||
+                  "No specific details provided for this market."}
+              </div>
+            </div>
+
+            <UserMarketTabs marketId={market.market_id} />
           </div>
         </div>
 
