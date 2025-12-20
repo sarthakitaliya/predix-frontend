@@ -39,8 +39,12 @@ export const useTrading = () => {
             return;
         }
 
-        // 2. Validate Balance (skip for merge orders as they don't consume USDC)
-        if (orderType !== "merge") {
+        // 2. Validate Balance (only check USDC for split orders or when buying in market/limit orders)
+        const shouldCheckBalance =
+            orderType === "split" ||
+            ((orderType === "market" || orderType === "limit") && action === "buy");
+
+        if (shouldCheckBalance) {
             const cost = Number(amount) * (orderType === "market" || orderType === "split" ? 1 : limitPrice);
             if (cost > Number(balance)) {
                 toast.error("Insufficient USDC balance");
