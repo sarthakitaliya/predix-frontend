@@ -1,5 +1,6 @@
 import { usePrivy, useIdentityToken } from "@privy-io/react-auth";
 import { useSignAndSendTransaction, useWallets } from "@privy-io/react-auth/solana";
+import { useUSDCBalance } from "./useUSDCBalance";
 import api from "@/app/utils/axiosInstance";
 import { useState } from "react";
 import { Market } from "@/types/market";
@@ -20,6 +21,7 @@ export const useTrading = () => {
     const { wallets } = useWallets();
     const { signAndSendTransaction } = useSignAndSendTransaction();
     const [loading, setLoading] = useState(false);
+    const { balance, refetch } = useUSDCBalance();
 
     const placeOrder = async ({
         market,
@@ -34,6 +36,11 @@ export const useTrading = () => {
         const selectedWallet = wallets[0];
         if (!selectedWallet) {
             toast.error("No wallet connected");
+            return;
+        }
+
+        if (parseFloat(amount) > parseFloat(balance)) {
+            toast.error("Insufficient USDC balance");
             return;
         }
 
@@ -173,6 +180,9 @@ export const useTrading = () => {
             return false;
         } finally {
             setLoading(false);
+            // Trigger the global refresh with animation
+            // The store handles polling at intervals, so we just call it once here
+            refetch();
         }
     };
 

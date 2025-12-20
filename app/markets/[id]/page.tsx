@@ -10,6 +10,7 @@ import { Orderbook } from "@/components/market/orderbook";
 import { Market } from "@/types/market";
 import { useTrading } from "@/hooks/useTrading";
 import { UserMenu } from "@/components/user-menu";
+import { useUSDCBalance } from "@/hooks/useUSDCBalance";
 import { SplitMergeModal } from "@/components/market/split-merge-modal";
 import { UserMarketTabs } from "@/components/market/user-market-tabs";
 import { useParams } from "next/navigation";
@@ -19,6 +20,7 @@ export default function MarketDetailPage() {
 
   const { user, login } = usePrivy();
   const { placeOrder, loading: tradeLoading } = useTrading();
+  const { balance, isRefreshing } = useUSDCBalance();
 
   const [market, setMarket] = useState<Market | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,7 @@ export default function MarketDetailPage() {
   const [amount, setAmount] = useState<string>("");
   const [limitPrice, setLimitPrice] = useState<number>(0.5);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOrderTypeOpen, setIsOrderTypeOpen] = useState(false);
 
   useEffect(() => {
     const fetchMarket = async () => {
@@ -124,7 +127,15 @@ export default function MarketDetailPage() {
                 </button>
               </div>
             ) : (
-              <UserMenu />
+              <div className="flex items-center gap-2">
+                <div className="hidden md:flex flex-col items-end mr-2">
+                  <span className="text-xs text-zinc-500 font-medium">Balance</span>
+                  <span className={`text-sm font-bold text-zinc-900 dark:text-zinc-100 transition-all duration-500 ${isRefreshing ? "animate-pulse text-green-500" : ""}`}>
+                    {balance} USDC
+                  </span>
+                </div>
+                <UserMenu />
+              </div>
             )}
           </div>
         </div>
@@ -217,7 +228,10 @@ export default function MarketDetailPage() {
                   </div>
 
                   <div className="relative group">
-                    <button className="text-xs font-bold flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer">
+                    <button
+                      onClick={() => setIsOrderTypeOpen(!isOrderTypeOpen)}
+                      className="text-xs font-bold flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                    >
                       {orderType === "market"
                         ? "Market Order"
                         : orderType === "limit"
@@ -226,7 +240,7 @@ export default function MarketDetailPage() {
                             ? "Split Order"
                             : "Merge Order"}
                       <svg
-                        className="w-3 h-3"
+                        className={`w-3 h-3 transition-transform group-hover:rotate-180 ${isOrderTypeOpen ? 'rotate-180' : ''}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -239,15 +253,21 @@ export default function MarketDetailPage() {
                         ></path>
                       </svg>
                     </button>
-                    <div className="absolute right-0 top-full mt-2 w-40 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 p-1">
+                    <div className={`absolute right-0 top-full mt-2 w-40 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-10 p-1 transition-all duration-200 ${isOrderTypeOpen ? 'opacity-100 visible' : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible'}`}>
                       <button
-                        onClick={() => setOrderType("market")}
+                        onClick={() => {
+                          setOrderType("market");
+                          setIsOrderTypeOpen(false);
+                        }}
                         className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       >
                         Market Order
                       </button>
                       <button
-                        onClick={() => setOrderType("limit")}
+                        onClick={() => {
+                          setOrderType("limit");
+                          setIsOrderTypeOpen(false);
+                        }}
                         className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       >
                         Limit Order
@@ -256,6 +276,7 @@ export default function MarketDetailPage() {
                         onClick={() => {
                           setOrderType("split");
                           setIsModalOpen(true);
+                          setIsOrderTypeOpen(false);
                         }}
                         className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       >
@@ -265,6 +286,7 @@ export default function MarketDetailPage() {
                         onClick={() => {
                           setOrderType("merge");
                           setIsModalOpen(true);
+                          setIsOrderTypeOpen(false);
                         }}
                         className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       >
@@ -424,11 +446,21 @@ export default function MarketDetailPage() {
 
                   {/* Quantity Input */}
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-400 uppercase">
-                      {orderType === "limit" || action === "sell"
-                        ? "Shares"
-                        : "Amount"}
-                    </label>
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-bold text-zinc-400 uppercase">
+                        {orderType === "limit" || action === "sell"
+                          ? "Shares"
+                          : "Amount"}
+                      </label>
+                      {user && (
+                        <span
+                          className="text-xs font-bold text-blue-500 cursor-pointer hover:text-blue-600 transition-colors"
+                          onClick={() => setAmount(balance)}
+                        >
+                          Available: {balance} USDC
+                        </span>
+                      )}
+                    </div>
                     <div className="relative">
                       <input
                         type="number"

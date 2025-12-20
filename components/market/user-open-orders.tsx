@@ -44,7 +44,6 @@ export const UserOpenOrders = ({ marketId, isEmbedded = false }: { marketId: str
 
         if (marketId && user) {
             fetchOpenOrders();
-            // Polling can be added here
             const interval = setInterval(fetchOpenOrders, 2000); // 2s polling for updates
             return () => clearInterval(interval);
         }
