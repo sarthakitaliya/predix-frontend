@@ -115,6 +115,22 @@ export default function Home() {
                 <UserMenu />
               </div>
             )}
+            {!user && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={login}
+                  className="text-zinc-600 dark:text-zinc-400 font-medium text-sm hover:text-zinc-900 dark:hover:text-zinc-100 px-4 py-2 cursor-pointer"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={login}
+                  className="bg-[#07C285] hover:bg-[#06a874] text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors cursor-pointer"
+                >
+                  Sign up
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>

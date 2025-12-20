@@ -3,6 +3,7 @@
 import { PrivyProvider } from "@privy-io/react-auth";
 import { ThemeProvider } from "next-themes";
 import { createSolanaRpc, createSolanaRpcSubscriptions } from '@solana/kit';
+import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   console.log(
@@ -10,6 +11,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     process.env.NEXT_PUBLIC_PRIVY_APP_ID,
     process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID
   );
+
+  const solanaConnectors = toSolanaWalletConnectors({
+    shouldAutoConnect: true,
+  });
+
   return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
@@ -18,7 +24,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         // Create embedded wallets for users who don't have a wallet
         embeddedWallets: {
           solana: {
-            createOnLogin: "all-users",
+            createOnLogin: "users-without-wallets",
           },
         },
         solana: {
@@ -31,7 +37,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         },
         appearance: {
           theme: "dark",
+          walletChainType: 'solana-only',
         },
+        externalWallets: {
+          solana: {
+            connectors: solanaConnectors,
+          },
+        },
+        loginMethods: ['wallet', 'google'],
       }}
     >
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
