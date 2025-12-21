@@ -457,7 +457,7 @@ export default function MarketDetailPage() {
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="0"
-                        className="w-full px-4 py-4 text-3xl font-bold bg-transparent border-b-2 border-zinc-200 dark:border-zinc-800 focus:border-black dark:focus:border-white outline-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700 transition-colors"
+                        className="w-full px-4 py-4 text-3xl font-bold bg-transparent border-b-2 border-zinc-200 dark:border-zinc-800 focus:border-black dark:focus:border-white outline-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700 transition-colors appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       {orderType === "market" && action === "buy" && (
                         <span className="absolute right-0 top-1/2 -translate-y-1/2 text-zinc-400 font-bold pr-2">
