@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Predix",
   description: "Decentralized Prediction Market on Solana",
+  alternates: {
+    canonical: "https://predix.sxrk.tech/",
+  },
 };
 
 export default function RootLayout({
