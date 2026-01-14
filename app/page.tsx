@@ -178,7 +178,7 @@ export default function Home() {
                 <Link
                   href={`/markets/${market.market_id}`}
                   key={market.id}
-                  className="group block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 hover:shadow-lg transition-all hover:border-zinc-300 dark:hover:border-zinc-700"
+                  className="group flex flex-col h-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 hover:shadow-lg transition-all hover:border-zinc-300 dark:hover:border-zinc-700"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex gap-4">
@@ -207,7 +207,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 mb-6">
+                  <div className="flex items-center gap-2 mb-4">
                     <span className="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">
                       Yes 78¢
                     </span>
@@ -216,7 +216,7 @@ export default function Home() {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <div className="flex items-center justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400 mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800">
                     <span>Vol. ${market.volume || "0"}</span>
                     <span>Ends {formatDate(market.close_time)}</span>
                   </div>
